@@ -1,0 +1,210 @@
+<template>
+  <section :style="{backgroundColor: this.color}">
+    <div class="col m4" v-if="this.throwData">
+      <header :style="{backgroundColor: this.color}">
+        <strong style="color: white"> {{this.throwData.name}} </strong>
+      </header>
+      <div v-if="this.throwData.items">
+        <div v-for="(single, count) in pushData" :key="count" class="ui container card">
+          <div class="card-content">
+            <span class="card-title activator grey-text text-darken-4"> {{single.title}} </span>
+            <p><i class="fas fa-user-tag"></i> {{single.who}}</p>
+            <p><i class="fas fa-star"></i> {{single.point}}</p>
+          </div>
+          <div class="ui button segment pink" @click="toggleDetail(single)">
+            Details
+          </div>
+          <div class="card-action ui">
+            <a @click="prev(single)">Revert</a>
+            <a @click="del(single)">Delete</a>
+            <a @click="next(single)">Forward</a>
+          </div>
+          <div class="overlay" v-if="detail"></div>
+          <div class="ui container card detail-modal" v-if="detail">
+            <div class="card-content">
+              <span class="card-title activator grey-text text-darken-4"> {{it.title}} </span>
+              <p><i class="fas fa-user-tag"></i> {{it.who}}</p>
+              <p><i class="fas fa-star"></i> {{it.point}}</p>
+            </div>
+            <div class="ui button segment" @click="toggleDetail">
+              Close Detail
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container card ui" v-else>
+        <div class="card-content">
+          <span class="card-title activator grey-text text-darken-4"> No Task </span>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script>
+import db from '@/assets/config.js'
+
+export default {
+  name: 'Column',
+  props: ['throwData', 'color'],
+  data () {
+    return {
+      detail: false,
+      it: ''
+    }
+  },
+  computed: {
+    pushData () {
+      let initD = Object.values(this.throwData)[0]
+      let itId = Object.keys(initD)
+      let itItem = Object.values(initD)
+      let single = {}
+      let index = 0
+      let items = []
+
+      itItem.forEach(elem => {
+        single.index = index
+        single.id = itId[index]
+        single.title = elem.title
+        single.point = elem.point
+        single.who = elem.who
+        items.push(single)
+        index++
+        single = {}
+      })
+      return items
+    }
+  },
+  methods: {
+    toggleDetail (single) {
+      this.detail = !this.detail
+      this.it = single
+    },
+    prev (data) {
+      if (this.throwData.name === 'Backlog') {
+        // console.log('can not revert from backlog')
+      } else if (this.throwData.name === 'Todo') {
+        db.ref('tasks/backlog/items').push({ title: data.title, point: data.point, who: data.who })
+        db.ref(`tasks/todo/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Doing') {
+        db.ref('tasks/todo/items').push({ title: data.title, point: data.point, who: data.who })
+        db.ref(`tasks/doing/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Done') {
+        db.ref('tasks/doing/items').push({ title: data.title, point: data.point, who: data.who })
+        db.ref(`tasks/done/items/${data.id}`).remove()
+      }
+    },
+    del (data) {
+      if (this.throwData.name === 'Backlog') {
+        db.ref(`tasks/backlog/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Todo') {
+        db.ref(`tasks/todo/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Doing') {
+        db.ref(`tasks/doing/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Done') {
+        db.ref(`tasks/done/items/${data.id}`).remove()
+      }
+    },
+    next (data) {
+      if (this.throwData.name === 'Backlog') {
+        db.ref('tasks/todo/items').push({ title: data.title, point: data.point, who: data.who })
+        db.ref(`tasks/backlog/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Todo') {
+        db.ref('tasks/doing/items').push({ title: data.title, point: data.point, who: data.who })
+        db.ref(`tasks/todo/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Doing') {
+        db.ref('tasks/done/items').push({ title: data.title, point: data.point, who: data.who })
+        db.ref(`tasks/doing/items/${data.id}`).remove()
+      } else if (this.throwData.name === 'Done') {
+        // console.log('can not forward from done')
+      }
+    }
+  },
+  created () {
+  }
+}
+</script>
+
+<style>
+.san {
+  display: flex;
+  justify-content: center;
+}
+
+section {
+  width: 100%;
+  padding: 0 20px;
+}
+
+section header {
+  padding: 10px 0;
+  font-size: large;
+}
+.card-content, .card-action {
+  border-radius: 20px;
+  background: none;
+}
+
+.card {
+  background: #ffffff6e
+}
+
+.card-content p {
+  text-align: left;
+  padding: 5px 0;
+  text-indent: 10%;
+}
+
+.card-content i {
+  position: relative;
+  margin: 0 10px;
+  float: left;
+}
+
+.fa-user-tag {
+  color: lightsalmon;
+}
+
+.fa-star {
+  color: darkviolet;
+}
+
+.card-action a {
+  cursor: pointer;
+  color: dimgrey!important;
+}
+
+.card-action a:hover {
+  cursor: pointer;
+  color: black!important;
+}
+
+.m4 {
+  margin-top: 30px;
+}
+
+.ui.card {
+  margin: 0 0 1em;
+}
+
+.ui.card, .ui.cards>.card {
+  box-shadow: 0;
+}
+
+.detail-modal {
+  position: fixed!important;
+  z-index: 1000;
+  top: 30%;
+  left: 42%;
+}
+
+.overlay {
+  background: #8080807a;
+  position: fixed!important;
+  z-index: 999;
+  top: 0;
+  left: 0;
+  width: 110%;
+  height: 110%;
+}
+</style>

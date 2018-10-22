@@ -1,0 +1,73 @@
+<template>
+  <div id="app">
+    <card-task/>
+    <div class="column-wrap">
+      <Column :throwData="backlogs" color="#ff4136"></Column>
+      <Column :throwData="todos" color="#ffb700"></Column>
+      <Column :throwData="doings" color="#19a974"></Column>
+      <Column :throwData="dones" color="lightblue"></Column>
+    </div>
+  </div>
+</template>
+
+<script>
+import Column from './components/Column.vue'
+import CardTask from './components/CardTask.vue'
+import { mapActions, mapMutations, mapState } from 'vuex'
+
+export default {
+  name: 'app',
+  data () {
+    return {
+    }
+  },
+  components: {
+    Column,
+    CardTask
+  },
+  methods: {
+    ...mapActions([
+      'getTasks',
+      'getBacklogs',
+      'getTodos',
+      'getDoings',
+      'getDones'
+    ]),
+    ...mapMutations([
+      'setTasks'
+    ])
+  },
+  computed: {
+    ...mapState([
+      'tasks',
+      'backlogs',
+      'todos',
+      'doings',
+      'dones'
+    ])
+  },
+  created () {
+    this.getTasks()
+    this.getBacklogs()
+    this.getTodos()
+    this.getDoings()
+    this.getDones()
+  }
+}
+</script>
+
+<style>
+body {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  /* background: #2c3e50; */
+}
+
+.column-wrap {
+  min-height: 120vh;
+  display: flex;
+  flex-direction: row;
+}
+</style>
